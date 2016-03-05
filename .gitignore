@@ -1,0 +1,11 @@
+# Bullshit
+libBackup.A.dylib.dSYM/
+main.dSYM/
+.DS_Store
+
+# Executable
+main
+libBackup.A.dylib
+
+# Git
+.git/
