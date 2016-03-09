@@ -1,5 +1,6 @@
 # HOW TO
   - Clone this repository
+  - libtins needed
   - ```$ cd App```
   - ```$ make ```
   - ```$ ./main```
