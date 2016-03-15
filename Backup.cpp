@@ -13,11 +13,12 @@
 	*************************************************
 */
  
- 
+#include <iostream>
 #include "Backup.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
  
 #define EXPORT __attribute__((visibility("default")))
 

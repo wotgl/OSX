@@ -13,61 +13,96 @@
     *************************************************
 */
 
-
+#include <iostream>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <thread>
+#include <tins/tins.h>
 #include "Backup.h"
 
 #define MAX_LENGTH 255
 
+using namespace Tins;
+
+void JeasusCopyFunction(int num, int* err, int *copyFlag);
 int readConsole(char *, size_t);
 void GC(int num, ...);
+void sniffer();
+bool callback(const PDU &pdu);
 
-
-int main(int argc, char **argv) {
-    char *containerPath, *fname;
+int main(int argc, char **argv){
     int err = 0;
-
-    containerPath = (char*)malloc(MAX_LENGTH * sizeof(char));
-    fname = (char*)malloc(MAX_LENGTH * sizeof(char));
-
-    printf("Enter path to container:\n");
-    err = readConsole(containerPath, MAX_LENGTH);
-    if (err) {
-        GC(2, containerPath, fname);
-        printf("[error]:\tread path of the container fails;\n");
-        return -1;
-    }
+    int magicNumber = 2;
+    int copyFlag = 1;
     
-    if (init(containerPath, MAX_LENGTH)) {
-        GC(2, containerPath, fname);
-        printf("[error]:\tinit of library failed;\n");
-        return -1;
-    }
-
-    printf("Enter absolute path to file:\n");
-    err = readConsole(fname, MAX_LENGTH);
-    if (err) {
-        GC(2, containerPath, fname);
-        printf("[error]:\tread path of the file fails;\n");
-        return -1;
-    }
-
-    if (copyFile(fname)) {
-        GC(2, containerPath, fname);
-        printf("[error]:\tcopy file fails;\n");
-        return -1;
-    }
-
-	GC(2, containerPath, fname);
-    printf("[done]\n");
-
+    std::thread copy(JeasusCopyFunction, magicNumber, &err, &copyFlag);
+    copy.join();
+    
+    std::thread test(sniffer);
+    test.join();
+    
+    std::cout << copyFlag << std::endl;
     return 0;
 }
 
+void sniffer(){
+    Sniffer sniffer("en1", 2000);
+    sniffer.sniff_loop(callback);
+    }
 
+bool callback(const PDU &pdu) {
+    const IP &ip = pdu.rfind_pdu<IP>();
+    const TCP &tcp = pdu.rfind_pdu<TCP>();
+    std::cout << ip.src_addr() << ':' << tcp.sport() << " -> "
+    << ip.dst_addr() << ':' << tcp.dport() << std::endl;
+    return true;
+}
+
+/*
+ Do copying in one tread
+ */
+void JeasusCopyFunction(int num, int *err, int *copyFlag){
+    char *containerPath = (char*)malloc(MAX_LENGTH * sizeof(char));
+    char *fname = (char*)malloc(MAX_LENGTH * sizeof(char));
+    printf("Enter path to container:\n");
+    *err = readConsole(containerPath, MAX_LENGTH);
+    if (*err) {
+        GC(num, containerPath, fname);
+        printf("[error]:\tread path of the container fails;\n");
+        *copyFlag = -1;
+        return;
+    }
+    
+    if (init(containerPath, MAX_LENGTH)) {
+        GC(num, containerPath, fname);
+        printf("[error]:\tinit of library failed;\n");
+        *copyFlag = -1;
+        return;
+    }
+    
+    printf("Enter absolute path to file:\n");
+    *err = readConsole(fname, MAX_LENGTH);
+    if (*err) {
+        GC(num, containerPath, fname);
+        printf("[error]:\tread path of the file fails;\n");
+        *copyFlag = -1;
+        return;
+    }
+    
+    if (copyFile(fname)) {
+        GC(num, containerPath, fname);
+        printf("[error]:\tcopy file fails;\n");
+        *copyFlag = -1;
+        return;
+    }
+    
+    GC(num, containerPath, fname);
+    printf("[done]\n");
+    *copyFlag = 0;
+    return;
+}
 /*
     Read data from console;
     input: pointer to char array, max length;
