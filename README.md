@@ -1,8 +1,9 @@
 # HOW TO
   - Clone this repository
+  - [libtins](https://libtins.github.io/) needed
   - ```$ cd App```
-  - ```$ make ```
-  - ```$ ./main```
+  - ```$ sudo make ```
+  - ```$ sudo ./main```
   - [PROFIT](http://bit.ly/IqT6zt)
 
 
