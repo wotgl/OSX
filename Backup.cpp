@@ -152,46 +152,46 @@ int copyFile(const char *fname) {
 	return 0;
 }
 
-EXPORT
-void JeasusCopyFunction(int *err, int *copyFlag, size_t MAX_LENGTH){
-    char *containerPath = (char*)malloc(MAX_LENGTH * sizeof(char));
-    char *fname = (char*)malloc(MAX_LENGTH * sizeof(char));
-    printf("Enter path to container:\n");
-    *err = readConsole(containerPath, MAX_LENGTH);
-    if (*err) {
-        GC(2, containerPath, fname);
-        printf("[error]:\tread path of the container fails;\n");
-        *copyFlag = -1;
-        return;
-    }
+// EXPORT
+// void JeasusCopyFunction(int *err, int *copyFlag, size_t MAX_LENGTH){
+//     char *containerPath = (char*)malloc(MAX_LENGTH * sizeof(char));
+//     char *fname = (char*)malloc(MAX_LENGTH * sizeof(char));
+//     printf("Enter path to container:\n");
+//     *err = readConsole(containerPath, MAX_LENGTH);
+//     if (*err) {
+//         GC(2, containerPath, fname);
+//         printf("[error]:\tread path of the container fails;\n");
+//         *copyFlag = -1;
+//         return;
+//     }
     
-    if (init(containerPath, MAX_LENGTH)) {
-        GC(2, containerPath, fname);
-        printf("[error]:\tinit of library failed;\n");
-        *copyFlag = -1;
-        return;
-    }
+//     if (init(containerPath, MAX_LENGTH)) {
+//         GC(2, containerPath, fname);
+//         printf("[error]:\tinit of library failed;\n");
+//         *copyFlag = -1;
+//         return;
+//     }
     
-    printf("Enter absolute path to file:\n");
-    *err = readConsole(fname, MAX_LENGTH);
-    if (*err) {
-        GC(2, containerPath, fname);
-        printf("[error]:\tread path of the file fails;\n");
-        *copyFlag = -1;
-        return;
-    }
+//     printf("Enter absolute path to file:\n");
+//     *err = readConsole(fname, MAX_LENGTH);
+//     if (*err) {
+//         GC(2, containerPath, fname);
+//         printf("[error]:\tread path of the file fails;\n");
+//         *copyFlag = -1;
+//         return;
+//     }
     
-    if (copyFile(fname)) {
-        GC(2, containerPath, fname);
-        printf("[error]:\tcopy file fails;\n");
-        *copyFlag = -1;
-        return;
-    }
+//     if (copyFile(fname)) {
+//         GC(2, containerPath, fname);
+//         printf("[error]:\tcopy file fails;\n");
+//         *copyFlag = -1;
+//         return;
+//     }
     
-    GC(2, containerPath, fname);
-    printf("[done]\n");
-    *copyFlag = 0;
-    return;
-};
+//     GC(2, containerPath, fname);
+//     printf("[done]\n");
+//     *copyFlag = 0;
+//     return;
+// };
 
 

@@ -19,43 +19,41 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <thread>
-#include <tins/tins.h>
 #include "Backup.h"
+#include "Sniffer.h"
+#include "filetracker.hpp"
 
 #define MAX_LENGTH 255
 
 
-void sniffer();
-bool callback(const Tins::PDU &pdu);
-
+// 1-st arg - interface
 int main(int argc, char **argv){
-    int err = 0;
-    int copyFlag = 1;
+    std::string snifferInterface = "en0";   
+    if (argc > 1) {
+        snifferInterface = argv[1];
+    }
+
+    // FileTracker f("/tmp/");
+
+    // std::thread fileTracker(&FileTracker::checkDifference, FileTracker());
+
+    // std::thread fileTracker(f.checkDifference);
+    // fileTracker.join();
+
+
     
-    std::thread copy(JeasusCopyFunction, &err, &copyFlag, MAX_LENGTH);
-    copy.join();
-    std::cout << "errorr : " << copyFlag << std::endl;
-    
+
     std::cout << "begin scaning ...\n";
-    std::thread test(sniffer);
-    test.join();
-    
-//    std::cout << "errorr : " << copyFlag << std::endl;
+    std::thread sniffer(initSniffer, snifferInterface);
+
+    std::cout << "HAHA" << std::endl;
+
+    FileTracker f("/tmp/");
+    f.checkDifference();
+    sniffer.join();
     return 0;
 }
 
-void sniffer(){
-    Tins::Sniffer sniffer("en1", 2000);
-    sniffer.sniff_loop(callback);
-    }
-
-bool callback(const Tins::PDU &pdu) {
-    const Tins::IP &ip = pdu.rfind_pdu<Tins::IP>();
-    const Tins::TCP &tcp = pdu.rfind_pdu<Tins::TCP>();
-    std::cout << ip.src_addr() << ':' << tcp.sport() << " -> "
-    << ip.dst_addr() << ':' << tcp.dport() << std::endl;
-    return true;
-}
 
 
 
