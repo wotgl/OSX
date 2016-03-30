@@ -4,7 +4,6 @@ main.dSYM/
 .DS_Store
 
 # Executable
-main
 libBackup.A.dylib
 
 # Git
