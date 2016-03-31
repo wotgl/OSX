@@ -1,34 +1,43 @@
 #pragma once
 
-#include <string>
-#include <map>
-#include <vector>
-#include <utility>
 #include <dirent.h>
-#include <iostream>
-#include <fstream>
-#include <thread>
-#include <sstream>
+#include <algorithm>
 #include <chrono>
+#include <fstream>
+#include <iostream>
+#include <map>
 #include <mutex>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <utility>
+#include <vector>
 
 class FileTracker {
-public:
+   public:
     FileTracker(const char* directory);
     ~FileTracker();
 
     void printFileNames();
     void printFilesHash();
-    void checkDifference(); //function that checks difference.
-    void trackFile(std::string filename);
-private:
-    DIR *dir; //directory we scan
-    const char* directory; //the directory we are in.
-    std::vector<std::string> fileNames; //we get file names, then scan them.
+    void checkDifference();  // function that checks difference.
+
+    // checkDifferenceNotMulti checks difference of directory.
+    //
+    // It creates two threads: first tracks edition of files, second tracks
+    // creation of files. Deletion of files is tracked in first thread.
+    void checkDifferenceNotMulti();
+    void checkFileAdd();
+
+   private:
+    DIR* dir;                            // directory we scan
+    const char* directory;               // the directory we are in.
+    std::vector<std::string> fileNames;  // we get file names, then scan them.
     std::map<std::string, size_t> filesHash;
     size_t getFileHash(std::string filename);
-    std::string readFile(std::string filename); //we read file and get string
+    std::string readFile(std::string filename);  // we read file and get string
 
+    void trackFilesNotMulti();
 
     std::mutex locker;
 };

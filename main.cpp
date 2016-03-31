@@ -4,7 +4,7 @@
 
 /*
     *************************************************
-    
+
     ATTENTION!
     Everywhere below, the style is applied to golang:
         function returns 0 - OK;
@@ -13,11 +13,11 @@
     *************************************************
 */
 
-#include <iostream>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <iostream>
 #include <thread>
 #include "Backup.h"
 #include "Sniffer.h"
@@ -25,10 +25,9 @@
 
 #define MAX_LENGTH 255
 
-
 // 1-st arg - interface
-int main(int argc, char **argv){
-    std::string snifferInterface = "en0";   
+int main(int argc, char **argv) {
+    std::string snifferInterface = "en0";
     if (argc > 1) {
         snifferInterface = argv[1];
     }
@@ -40,21 +39,13 @@ int main(int argc, char **argv){
     // std::thread fileTracker(f.checkDifference);
     // fileTracker.join();
 
-
-    
-
     std::cout << "begin scaning ...\n";
     std::thread sniffer(initSniffer, snifferInterface);
 
     std::cout << "HAHA" << std::endl;
 
     FileTracker f("/tmp/");
-    f.checkDifference();
+    f.checkDifferenceNotMulti();
     sniffer.join();
     return 0;
 }
-
-
-
-
-
