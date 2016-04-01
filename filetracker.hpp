@@ -20,7 +20,6 @@ class FileTracker {
 
     void printFileNames();
     void printFilesHash();
-    void checkDifference();  // function that checks difference.
 
     // checkDifferenceNotMulti checks difference of directory.
     //

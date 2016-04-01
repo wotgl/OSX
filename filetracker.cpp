@@ -49,17 +49,6 @@ size_t FileTracker::getFileHash(std::string filename) {
     return h(readFile(filename));
 }
 
-void FileTracker::checkDifference() {
-    std::vector<std::thread> threads;
-    for (int i = 0; i < fileNames.size(); ++i) {
-        std::string filename = fileNames.at(i);
-        threads.push_back(std::thread(&FileTracker::trackFile, this, filename));
-    }
-    for (int i = 0; i < threads.size(); ++i) {
-        threads.at(i).join();
-    }
-}
-
 void FileTracker::trackFilesNotMulti() {
     for (;;) {
         for (auto iter = fileNames.begin(); iter != fileNames.end(); ++iter) {
@@ -102,17 +91,6 @@ void FileTracker::checkDifferenceNotMulti() {
 
     addChecker.join();
     fileChecker.join();
-}
-
-void FileTracker::checkDifference() {
-    std::vector<std::thread> threads;
-    for (int i = 0; i < fileNames.size(); ++i) {
-        std::string filename = fileNames.at(i);
-        threads.push_back(std::thread(&FileTracker::trackFile, this, filename));
-    }
-    for (int i = 0; i < threads.size(); ++i) {
-        threads.at(i).join();
-    }
 }
 
 void FileTracker::printFileNames() {
