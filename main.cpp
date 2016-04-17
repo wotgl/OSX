@@ -42,10 +42,7 @@ int main(int argc, char **argv) {
         launchInit();
     }
     fout.close();
-    
-    // fprintf(file,"test");
 
-    // printf("The current working directory is %s \n", cCurrentPath);
     // FileTracker f("/tmp/");
 
     // std::thread fileTracker(&FileTracker::checkDifference, FileTracker());
