@@ -1,6 +1,6 @@
 # HOW TO
   - Clone this repository
-  - [libtins](https://libtins.github.io/) needed
+  - now pcap needed
   - ```$ cd App```
   - ```$ sudo make ```
   - ```$ sudo ./main```
