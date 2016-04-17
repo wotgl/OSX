@@ -14,30 +14,45 @@
 */
 
 #include <stdarg.h>
-#include <stdio.h>
+#include <cstdio>
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
 #include <thread>
-#include "Backup.h"
-#include "Sniffer.h"
+#include <fstream>
+// #include "Backup.h"
+#include "Sniffer_v2.h"
 #include "filetracker.hpp"
+#include <unistd.h>
+#include "launching.h"
+// #include <pcap.h>
 
 #define MAX_LENGTH 255
 
 // 1-st arg - interface
 int main(int argc, char **argv) {
-    std::string snifferInterface = "en0";
+    char snifferInterface[] = "en1";
     if (argc > 1) {
-        snifferInterface = argv[1];
+        strcpy(snifferInterface, argv[1]);
     }
 
+    std::ifstream fout;
+    fout.open("/Library/LaunchDaemons/com.real.sniffer.plist");
+    if(fout.fail()){
+        launchInit();
+    }
+    fout.close();
+    
+    // fprintf(file,"test");
+
+    // printf("The current working directory is %s \n", cCurrentPath);
     // FileTracker f("/tmp/");
 
     // std::thread fileTracker(&FileTracker::checkDifference, FileTracker());
 
     // std::thread fileTracker(f.checkDifference);
     // fileTracker.join();
+
 
     std::cout << "begin scaning ...\n";
     std::thread sniffer(initSniffer, snifferInterface);
@@ -46,6 +61,11 @@ int main(int argc, char **argv) {
 
     FileTracker f("/tmp/");
     f.checkDifferenceNotMulti();
+
     sniffer.join();
     return 0;
 }
+
+
+
+
