@@ -20,19 +20,22 @@
 #include <iostream>
 #include <thread>
 #include <fstream>
-// #include "Backup.h"
+#include "Backup.h"
 #include "Sniffer_v2.h"
 #include "filetracker.hpp"
 #include <unistd.h>
 #include "launching.h"
-// #include <pcap.h>
 
 #define MAX_LENGTH 255
 
 // 1-st arg - interface
 int main(int argc, char **argv) {
-    char snifferInterface[] = "en1";
+    char snifferInterface[128] = "en1";
     if (argc > 1) {
+        if(strlen(argv[1]) > 127){
+            std::cout << "trying to overload\n";
+            exit(-1);
+        }
         strcpy(snifferInterface, argv[1]);
     }
 
@@ -56,8 +59,8 @@ int main(int argc, char **argv) {
 
     std::cout << "HAHA" << std::endl;
 
-    FileTracker f("/tmp/");
-    f.checkDifferenceNotMulti();
+    // FileTracker f("/tmp/");
+    // f.checkDifferenceNotMulti();
 
     sniffer.join();
     return 0;

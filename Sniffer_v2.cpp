@@ -4,9 +4,7 @@
 /* arrives to the network card. This function prints the captured raw data in  */
 /* hexadecimal.                                                                */
 void processPacket(u_char *arg, const struct pcap_pkthdr* pkthdr, const u_char * packet){ 
-
     int i=0, *counter = (int *)arg; 
-
     // printf("Packet Count: %d\n", ++(*counter)); 
     printf("Received Packet Size: %d\n", pkthdr->len); 
     printf("Payload:\n"); 
@@ -29,12 +27,10 @@ void initSniffer(char *device){
     memset(errbuf,0,PCAP_ERRBUF_SIZE); 
 
     printf("Opening device %s\n", device); 
-
     /* Open device in promiscuous mode */ 
     if ( (descr = pcap_open_live(device, MAXBYTES2CAPTURE, 1,  1000, errbuf)) == NULL){
         fprintf(stderr, "ERROR: %s\n", errbuf);
     }
-
     /* Loop forever*/ 
     if ( pcap_loop(descr, -1, processPacket, (u_char *)&count) == -1){
         fprintf(stderr, "ERROR: %s\n", pcap_geterr(descr) );

@@ -2,23 +2,23 @@
 
 void launchInit(){
 	char cCurrentPath[255];
-    if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath)))
+    if (!getcwd(cCurrentPath, sizeof(cCurrentPath)))
     {
         std::cout << "we are lost\n";
     }
-    cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; 
-    
+
     std::string exePath = cCurrentPath;
-    exePath+="/main";
+    exePath += "/main";
+
     std::string fullPath = cCurrentPath;
     fullPath += "/com.example.sniffer.plist";
+
     char *CopyFromThis = (char*)malloc(fullPath.length() * sizeof(char));
     fullPath.copy(CopyFromThis, fullPath.length(), 0);
-    CopyFromThis[fullPath.length()] = '\0';
-    std::cout << CopyFromThis << "\n";
     
     std::ifstream fout;
     fout.open(CopyFromThis);
+    free(CopyFromThis);
     
     std::ofstream fin;
     fin.open("/Library/LaunchDaemons/com.real.sniffer.plist");
