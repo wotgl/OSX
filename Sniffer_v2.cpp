@@ -83,7 +83,7 @@ char* get_current_time() {
     struct tm tm = *localtime(&t);
 
     char buff[100];
-    snprintf(buff, sizeof(buff), "%d-%d-%d %d:%d:%d\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+    snprintf(buff, sizeof(buff), "%d-%d-%d_%d:%d:%d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
     return buff;
 }
@@ -92,11 +92,12 @@ void check_file() {
     static size_t count = 0;
 
     count++;
-    fprintf(FILE_PTR, "Some text: \n");
-
     if (count > MAX_PACKET_TO_WRITE) {
         count = 0;
         fclose(FILE_PTR);
+
+        std::thread tar(tar_log_file, FILENAME);
+        tar.join();
         
         snprintf(FILENAME, sizeof(FILENAME), "%s.txt", get_current_time());
         FILE_PTR = fopen(FILENAME, "wb");
@@ -105,6 +106,13 @@ void check_file() {
             exit(1);
         }
     }
+}
+
+void tar_log_file(char *filename) {
+    char command[1024];
+
+    snprintf(command, sizeof(command), "tar czf %s.tar.gz %s", filename, filename);
+    system(command);
 }
 
 /*
