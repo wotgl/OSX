@@ -3,6 +3,7 @@
 #include <stdlib.h> 
 #include <ctype.h>
 #include <fstream>
+#include <stdio.h>
 #define MAXBYTES2CAPTURE 2048 
 #define SIZE_ETHERNET 14
 
@@ -14,4 +15,6 @@ void print_payload(const u_char *payload, int len);
 
 void print_hex_ascii_line(const u_char *payload, int len, int offset);
 
-void print_current_time();
+char* get_current_time();
+
+void check_file();

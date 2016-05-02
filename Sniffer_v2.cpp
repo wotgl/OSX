@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <stdio.h>
 
 /* default snap length (maximum bytes per packet to capture) */
 #define SNAP_LEN 1518
@@ -19,6 +20,11 @@
 
 /* Ethernet addresses are 6 bytes */
 #define ETHER_ADDR_LEN  6
+
+char FILENAME[1024];
+FILE* FILE_PTR;
+size_t MAX_PACKET_TO_WRITE = 20;
+
 
 /* Ethernet header */
 struct sniff_ethernet {
@@ -72,10 +78,33 @@ struct sniff_tcp {
 };
 
 
-void print_current_time() {
+char* get_current_time() {
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
-    printf("   Time: %d-%d-%d %d:%d:%d\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec); 
+
+    char buff[100];
+    snprintf(buff, sizeof(buff), "%d-%d-%d %d:%d:%d\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+    return buff;
+}
+
+void check_file() {
+    static size_t count = 0;
+
+    count++;
+    fprintf(FILE_PTR, "Some text: \n");
+
+    if (count > MAX_PACKET_TO_WRITE) {
+        count = 0;
+        fclose(FILE_PTR);
+        
+        snprintf(FILENAME, sizeof(FILENAME), "%s.txt", get_current_time());
+        FILE_PTR = fopen(FILENAME, "wb");
+        if (FILE_PTR == NULL) {
+            printf("Error opening file!\n");
+            exit(1);
+        }
+    }
 }
 
 /*
@@ -89,41 +118,41 @@ void print_hex_ascii_line(const u_char *payload, int len, int offset) {
     const u_char *ch;
 
     /* offset */
-    printf("%05d   ", offset);
+    fprintf(FILE_PTR, "%05d   ", offset);
     
     /* hex */
     ch = payload;
     for(i = 0; i < len; i++) {
-        printf("%02x ", *ch);
+        fprintf(FILE_PTR, "%02x ", *ch);
         ch++;
         /* print extra space after 8th byte for visual aid */
         if (i == 7)
-            printf(" ");
+            fprintf(FILE_PTR, " ");
     }
     /* print space to handle line less than 8 bytes */
     if (len < 8)
-        printf(" ");
+        fprintf(FILE_PTR, " ");
     
     /* fill hex gap with spaces if not full line */
     if (len < 16) {
         gap = 16 - len;
         for (i = 0; i < gap; i++) {
-            printf("   ");
+            fprintf(FILE_PTR, "   ");
         }
     }
-    printf("   ");
+    fprintf(FILE_PTR, "   ");
     
     /* ascii (if printable) */
     ch = payload;
     for(i = 0; i < len; i++) {
         if (isprint(*ch))
-            printf("%c", *ch);
+            fprintf(FILE_PTR, "%c", *ch);
         else
-            printf(".");
+            fprintf(FILE_PTR, ".");
         ch++;
     }
 
-    printf("\n");
+    fprintf(FILE_PTR, "\n");
 
     return;
 }
@@ -176,6 +205,8 @@ void print_payload(const u_char *payload, int len) {
  */
 void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
     static int count = 1;                   /* packet counter */
+
+    check_file();
     
     /* declare pointers to packet headers */
     const struct sniff_ethernet *ethernet;  /* The ethernet header [1] */
@@ -187,7 +218,7 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
     int size_tcp;
     int size_payload;
     
-    printf("\nPacket number %d:\n", count);
+    fprintf(FILE_PTR, "\nPacket number %d:\n", count);
     count++;
     
     /* define ethernet header */
@@ -197,33 +228,33 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
     ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
     size_ip = IP_HL(ip)*4;
     if (size_ip < 20) {
-        printf("   * Invalid IP header length: %u bytes\n", size_ip);
+        fprintf(FILE_PTR, "   * Invalid IP header length: %u bytes\n", size_ip);
         return;
     }
 
     /* print source and destination IP addresses */
-    printf("       From: %s\n", inet_ntoa(ip->ip_src));
-    printf("         To: %s\n", inet_ntoa(ip->ip_dst));
+    fprintf(FILE_PTR, "       From: %s\n", inet_ntoa(ip->ip_src));
+    fprintf(FILE_PTR, "         To: %s\n", inet_ntoa(ip->ip_dst));
     
     /* Time */
-    print_current_time();
+    fprintf(FILE_PTR, "   Time: %s\n", get_current_time());
 
     /* determine protocol */    
     switch(ip->ip_p) {
         case IPPROTO_TCP:
-            printf("   Protocol: TCP\n");
+            fprintf(FILE_PTR, "   Protocol: TCP\n");
             break;
         case IPPROTO_UDP:
-            printf("   Protocol: UDP\n");
+            fprintf(FILE_PTR, "   Protocol: UDP\n");
             return;
         case IPPROTO_ICMP:
-            printf("   Protocol: ICMP\n");
+            fprintf(FILE_PTR, "   Protocol: ICMP\n");
             return;
         case IPPROTO_IP:
-            printf("   Protocol: IP\n");
+            fprintf(FILE_PTR, "   Protocol: IP\n");
             return;
         default:
-            printf("   Protocol: unknown\n");
+            fprintf(FILE_PTR, "   Protocol: unknown\n");
             return;
     }
     
@@ -235,12 +266,12 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
     tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + size_ip);
     size_tcp = TH_OFF(tcp)*4;
     if (size_tcp < 20) {
-        printf("   * Invalid TCP header length: %u bytes\n", size_tcp);
+        fprintf(FILE_PTR, "   * Invalid TCP header length: %u bytes\n", size_tcp);
         return;
     }
     
-    printf("   Src port: %d\n", ntohs(tcp->th_sport));
-    printf("   Dst port: %d\n", ntohs(tcp->th_dport));
+    fprintf(FILE_PTR, "   Src port: %d\n", ntohs(tcp->th_sport));
+    fprintf(FILE_PTR, "   Dst port: %d\n", ntohs(tcp->th_dport));
     
     /* define/compute tcp payload (segment) offset */
     payload = (u_char *)(packet + SIZE_ETHERNET + size_ip + size_tcp);
@@ -253,7 +284,7 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
      * treat it as a string.
      */
     if (size_payload > 0) {
-        printf("   Payload (%d bytes):\n", size_payload);
+        fprintf(FILE_PTR, "   Payload (%d bytes):\n", size_payload);
         print_payload(payload, size_payload);
     }
 
@@ -314,12 +345,21 @@ void initSniffer(char *device){
         exit(EXIT_FAILURE);
     }
 
+    /* Open file */
+    snprintf(FILENAME, sizeof(FILENAME), "%s.txt", get_current_time());
+    FILE_PTR = fopen(FILENAME, "wb");
+    if (FILE_PTR == NULL) {
+        printf("Error opening file!\n");
+        exit(1);
+    }
+
     /* now we can set our callback function */
     pcap_loop(handle, num_packets, got_packet, NULL);
 
     /* cleanup */
     pcap_freecode(&fp);
     pcap_close(handle);
-
+    fclose(FILE_PTR);
+    
     printf("\nCapture complete.\n");
 }
