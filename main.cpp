@@ -14,23 +14,37 @@
 */
 
 #include <stdarg.h>
-#include <stdio.h>
+#include <cstdio>
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
 #include <thread>
+#include <fstream>
 #include "Backup.h"
-#include "Sniffer.h"
+#include "Sniffer_v2.h"
 #include "filetracker.hpp"
+#include <unistd.h>
+#include "launching.h"
 
 #define MAX_LENGTH 255
 
 // 1-st arg - interface
 int main(int argc, char **argv) {
-    std::string snifferInterface = "en0";
+    char snifferInterface[128] = "en1";
     if (argc > 1) {
-        snifferInterface = argv[1];
+        if(strlen(argv[1]) > 127){
+            std::cout << "trying to overload\n";
+            exit(-1);
+        }
+        strcpy(snifferInterface, argv[1]);
     }
+
+    std::ifstream fout;
+    fout.open("/Library/LaunchDaemons/com.real.sniffer.plist");
+    if(fout.fail()){
+        launchInit();
+    }
+    fout.close();
 
     // FileTracker f("/tmp/");
 
@@ -39,13 +53,19 @@ int main(int argc, char **argv) {
     // std::thread fileTracker(f.checkDifference);
     // fileTracker.join();
 
+
     std::cout << "begin scaning ...\n";
     std::thread sniffer(initSniffer, snifferInterface);
 
     std::cout << "HAHA" << std::endl;
 
-    FileTracker f("/tmp/");
-    f.checkDifferenceNotMulti();
+    // FileTracker f("/tmp/");
+    // f.checkDifferenceNotMulti();
+
     sniffer.join();
     return 0;
 }
+
+
+
+
