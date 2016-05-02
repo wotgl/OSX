@@ -23,7 +23,7 @@
 
 char FILENAME[1024];
 FILE* FILE_PTR;
-size_t MAX_PACKET_TO_WRITE = 20;
+size_t MAX_PACKETS_TO_WRITE = 20;
 
 
 /* Ethernet header */
@@ -92,7 +92,7 @@ void check_file() {
     static size_t count = 0;
 
     count++;
-    if (count > MAX_PACKET_TO_WRITE) {
+    if (count > MAX_PACKETS_TO_WRITE) {
         count = 0;
         fclose(FILE_PTR);
 
@@ -299,8 +299,7 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
     return;
 }
 
-void initSniffer(char *device){ 
-    char *dev = NULL;           /* capture device name */
+void initSniffer(char *dev){ 
     char errbuf[PCAP_ERRBUF_SIZE];      /* error buffer */
     pcap_t *handle;             /* packet capture handle */
 
@@ -309,9 +308,6 @@ void initSniffer(char *device){
     bpf_u_int32 mask;           /* subnet mask */
     bpf_u_int32 net;            /* ip */
     int num_packets = 0;           /* number of packets to capture */
-
-    /* check for capture device name on command-line */
-    dev = device;
     
     /* get network number and mask associated with capture device */
     if (pcap_lookupnet(dev, &net, &mask, errbuf) == -1) {
