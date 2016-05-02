@@ -102,8 +102,8 @@ void check_file() {
         snprintf(FILENAME, sizeof(FILENAME), "%s.txt", get_current_time());
         FILE_PTR = fopen(FILENAME, "wb");
         if (FILE_PTR == NULL) {
-            printf("Error opening file!\n");
-            exit(1);
+            fprintf(stderr, "Error opening file!\n");
+            exit(EXIT_FAILURE);
         }
     }
 }
@@ -353,8 +353,8 @@ void initSniffer(char *dev){
     snprintf(FILENAME, sizeof(FILENAME), "%s.txt", get_current_time());
     FILE_PTR = fopen(FILENAME, "wb");
     if (FILE_PTR == NULL) {
-        printf("Error opening file!\n");
-        exit(1);
+        fprintf(stderr, "Error opening file!\n");
+        exit(EXIT_FAILURE);
     }
 
     /* now we can set our callback function */
