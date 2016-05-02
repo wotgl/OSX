@@ -46,22 +46,14 @@ int main(int argc, char **argv) {
     }
     fout.close();
 
-    // FileTracker f("/tmp/");
-
-    // std::thread fileTracker(&FileTracker::checkDifference, FileTracker());
-
-    // std::thread fileTracker(f.checkDifference);
-    // fileTracker.join();
-
-
     std::cout << "begin scaning ...\n";
     std::thread sniffer(initSniffer, snifferInterface);
 
+    
+
+    FileTracker f("/tmp/");
+    f.checkDifferenceNotMulti();
     std::cout << "HAHA" << std::endl;
-
-    // FileTracker f("/tmp/");
-    // f.checkDifferenceNotMulti();
-
     sniffer.join();
     return 0;
 }
