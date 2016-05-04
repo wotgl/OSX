@@ -2,7 +2,22 @@
 #include <string.h> 
 #include <stdlib.h> 
 #include <ctype.h>
+#include <fstream>
+#include <stdio.h>
+#include <thread>
 #define MAXBYTES2CAPTURE 2048 
+#define SIZE_ETHERNET 14
 
-void processPacket(u_char *arg, const struct pcap_pkthdr* pkthdr, const u_char * packet);
 void initSniffer(char *device);
+
+void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
+
+void print_payload(const u_char *payload, int len);
+
+void print_hex_ascii_line(const u_char *payload, int len, int offset);
+
+char* get_current_time();
+
+void check_file();
+
+void tar_log_file(char *filename);

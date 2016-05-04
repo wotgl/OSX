@@ -8,3 +8,9 @@ libBackup.A.dylib
 
 # Git
 .git/
+
+# txt
+*.txt
+
+# pcap
+*.pcap
