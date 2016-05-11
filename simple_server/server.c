@@ -69,12 +69,11 @@ void *connection_handler(void *socket_desc) {
   char *message, client_message[message_size], *filename;
 
   filename = get_name_by_current_time();
-  FILE *f = fopen(filename, "w");
+  FILE *f = fopen(filename, "wb");
   free(filename);
 
   while ((read_size = recv(sock, client_message, message_size, 0)) > 0) {
-    client_message[read_size] = '\0';
-    fprintf(f, "%s", client_message);
+    fprintf(f, client_message);
     memset(client_message, 0, message_size);
   }
   fclose(f);
@@ -96,7 +95,7 @@ char *get_name_by_current_time() {
 
   char *buff = (char *)malloc(sizeof(char) * buffer_size);
   memset(buff, 0, buffer_size);
-  snprintf(buff, buffer_size, "%d-%d-%d-%d:%d:%d.txt", tm.tm_year + 1900,
+  snprintf(buff, buffer_size, "%d-%d-%d-%d:%d:%d.tar.gz", tm.tm_year + 1900,
            tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
   return buff;

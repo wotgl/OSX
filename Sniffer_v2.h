@@ -5,6 +5,10 @@
 #include <fstream>
 #include <stdio.h>
 #include <thread>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/stat.h>
+#include <string.h>
 #define MAXBYTES2CAPTURE 2048 
 #define SIZE_ETHERNET 14
 
@@ -21,3 +25,5 @@ char* get_current_time();
 void check_file();
 
 void tar_log_file(char *filename);
+
+int send_to_server(char *data, int data_size);

