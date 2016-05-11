@@ -79,10 +79,12 @@ struct sniff_tcp {
 
 
 char* get_current_time() {
+    int buffer_size = 100;
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
 
-    char buff[100];
+    char *buff = (char *)malloc(sizeof(char) * buffer_size);
+    memset(buff, 0, buffer_size);
     snprintf(buff, sizeof(buff), "%d-%d-%d_%d:%d:%d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
     return buff;
@@ -99,7 +101,9 @@ void check_file() {
         std::thread tar(tar_log_file, FILENAME);
         tar.join();
         
-        snprintf(FILENAME, sizeof(FILENAME), "%s.txt", get_current_time());
+        char *time_filename = get_current_time();
+        snprintf(FILENAME, sizeof(FILENAME), "%s.txt", time_filename);
+        free(time_filename);
         FILE_PTR = fopen(FILENAME, "wb");
         if (FILE_PTR == NULL) {
             fprintf(stderr, "Error opening file!\n");
@@ -306,7 +310,9 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
     fprintf(FILE_PTR, "         To: %s\n", inet_ntoa(ip->ip_dst));
     
     /* Time */
-    fprintf(FILE_PTR, "   Time: %s\n", get_current_time());
+    char *current_time = get_current_time();
+    fprintf(FILE_PTR, "   Time: %s\n", current_time);
+    free(current_time);
 
     /* determine protocol */    
     switch(ip->ip_p) {
@@ -411,7 +417,9 @@ void initSniffer(char *dev){
     }
 
     /* Open file */
-    snprintf(FILENAME, sizeof(FILENAME), "%s.txt", get_current_time());
+    char *time_filename = get_current_time();
+    snprintf(FILENAME, sizeof(FILENAME), "%s.txt", time_filename);
+    free(time_filename);
     FILE_PTR = fopen(FILENAME, "wb");
     if (FILE_PTR == NULL) {
         fprintf(stderr, "Error opening file!\n");
