@@ -116,38 +116,14 @@ void tar_log_file(char *filename) {
 
     // Tar filename
     snprintf(tar_filename, sizeof(tar_filename), "%s.tar.gz", filename);
-    
-    // Get size of tar file
-    struct stat st;
-    stat(tar_filename, &st);
-    int size = st.st_size;
 
-    // File to buffer
-    char *buffer = (char*)malloc(sizeof(char) * size);
-    FILE *f = fopen(tar_filename, "rb");
-    for (size_t i = 0; i < size; ++i) {
-        int c = getc(f);
-
-        if (c == EOF) {
-            buffer[i] = 0x00;
-            break;
-        }
-
-        buffer[i] = c;
-    }
-    fclose(f);
-
-    send_to_server(buffer, size);
-
-    free(buffer);
+    send_to_server(tar_filename);
 }
 
-int send_to_server(char *data, int data_size) {
+int send_to_server(char *filename) {
   int sockfd, portno, n;
   struct sockaddr_in serv_addr;
   struct hostent *server;
-
-  char buffer[256];
 
   portno = 12345;
 
@@ -172,8 +148,27 @@ int send_to_server(char *data, int data_size) {
     return -1;
   }
 
-  // Send message
-  n = write(sockfd, data, data_size);
+  // Get size of tar file
+  struct stat st;
+  stat(filename, &st);
+  int size = st.st_size;
+  fcntl(sockfd, F_SETFL, O_NONBLOCK);
+
+  // File to buffer
+  int tmp = 0;
+  unsigned char *buffer = (unsigned char *)malloc(sizeof(unsigned char) * size);
+  memset(buffer, 0, size);
+  FILE *f = fopen(filename, "rb");
+  for (int i = 0; i < size; ++i) {
+    unsigned char c = getc(f);
+    buffer[i] = c;
+    if (c == 0) {
+      n = write(sockfd, buffer + tmp, strlen((char*)buffer + tmp) + 1);
+      tmp = i + 1;
+    }
+  }
+  fclose(f);
+  free(buffer);
 
   if (n < 0) return -1;
 
@@ -292,6 +287,7 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
     int size_payload;
     
     fprintf(FILE_PTR, "\nPacket number %d:\n", count);
+    printf("Packet number %d:\n", count);
     count++;
     
     /* define ethernet header */

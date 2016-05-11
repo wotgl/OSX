@@ -65,22 +65,26 @@ void *connection_handler(void *socket_desc) {
   // Get the socket descriptor
   int sock = *(int *)socket_desc;
   int read_size;
-  int message_size = 16;
-  char *message, client_message[message_size], *filename;
+  int message_size = 1024;
+  char *message, *filename;
+  unsigned char client_message[message_size];
 
   filename = get_name_by_current_time();
-  FILE *f = fopen(filename, "wb");
+  FILE *f = fopen(filename, "w");
   free(filename);
 
+  int i = 0;
   while ((read_size = recv(sock, client_message, message_size, 0)) > 0) {
-    fprintf(f, client_message);
+    for (int i = 0; i < read_size; ++i) {
+      fprintf(f, "%c", client_message[i]);
+    }
+
     memset(client_message, 0, message_size);
   }
   fclose(f);
 
   if (read_size == 0) {
     printf("Client disconnected\n");
-    fflush(stdout);
   } else if (read_size == -1) {
     printf("[error]\tRecv failed\n");
   }
