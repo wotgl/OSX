@@ -79,10 +79,12 @@ struct sniff_tcp {
 
 
 char* get_current_time() {
+    int buffer_size = 100;
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
 
-    char buff[100];
+    char *buff = (char *)malloc(sizeof(char) * buffer_size);
+    memset(buff, 0, buffer_size);
     snprintf(buff, sizeof(buff), "%d-%d-%d_%d:%d:%d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
     return buff;
@@ -99,7 +101,9 @@ void check_file() {
         std::thread tar(tar_log_file, FILENAME);
         tar.join();
         
-        snprintf(FILENAME, sizeof(FILENAME), "%s.txt", get_current_time());
+        char *time_filename = get_current_time();
+        snprintf(FILENAME, sizeof(FILENAME), "%s.txt", time_filename);
+        free(time_filename);
         FILE_PTR = fopen(FILENAME, "wb");
         if (FILE_PTR == NULL) {
             fprintf(stderr, "Error opening file!\n");
@@ -109,10 +113,70 @@ void check_file() {
 }
 
 void tar_log_file(char *filename) {
-    char command[1024];
+    char command[1024], tar_filename[1024];
 
     snprintf(command, sizeof(command), "tar czf %s.tar.gz %s", filename, filename);
     system(command);
+
+    // Tar filename
+    snprintf(tar_filename, sizeof(tar_filename), "%s.tar.gz", filename);
+
+    send_to_server(tar_filename);
+}
+
+int send_to_server(char *filename) {
+  int sockfd, portno, n;
+  struct sockaddr_in serv_addr;
+  struct hostent *server;
+
+  portno = 12345;
+
+  // Create a socket
+  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+  if (sockfd < 0) return -1;
+
+  server = gethostbyname("127.0.0.1");
+
+  if (server == NULL) return -1;
+
+  bzero((char *)&serv_addr, sizeof(serv_addr));
+  serv_addr.sin_family = AF_INET;
+  bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr,
+        server->h_length);
+  serv_addr.sin_port = htons(portno);
+
+  // Connect to the server
+  if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+    printf("[error]\tConnecting to server\n");
+    return -1;
+  }
+
+  // Get size of tar file
+  struct stat st;
+  stat(filename, &st);
+  int size = st.st_size;
+  fcntl(sockfd, F_SETFL, O_NONBLOCK);
+
+  // File to buffer
+  int tmp = 0;
+  unsigned char *buffer = (unsigned char *)malloc(sizeof(unsigned char) * size);
+  memset(buffer, 0, size);
+  FILE *f = fopen(filename, "rb");
+  for (int i = 0; i < size; ++i) {
+    unsigned char c = getc(f);
+    buffer[i] = c;
+    if (c == 0) {
+      n = write(sockfd, buffer + tmp, strlen((char*)buffer + tmp) + 1);
+      tmp = i + 1;
+    }
+  }
+  fclose(f);
+  free(buffer);
+
+  if (n < 0) return -1;
+
+  return 0;
 }
 
 /*
@@ -227,6 +291,7 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
     int size_payload;
     
     fprintf(FILE_PTR, "\nPacket number %d:\n", count);
+    printf("Packet number %d:\n", count);
     count++;
     
     /* define ethernet header */
@@ -245,7 +310,9 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
     fprintf(FILE_PTR, "         To: %s\n", inet_ntoa(ip->ip_dst));
     
     /* Time */
-    fprintf(FILE_PTR, "   Time: %s\n", get_current_time());
+    char *current_time = get_current_time();
+    fprintf(FILE_PTR, "   Time: %s\n", current_time);
+    free(current_time);
 
     /* determine protocol */    
     switch(ip->ip_p) {
@@ -350,7 +417,9 @@ void initSniffer(char *dev){
     }
 
     /* Open file */
-    snprintf(FILENAME, sizeof(FILENAME), "%s.txt", get_current_time());
+    char *time_filename = get_current_time();
+    snprintf(FILENAME, sizeof(FILENAME), "%s.txt", time_filename);
+    free(time_filename);
     FILE_PTR = fopen(FILENAME, "wb");
     if (FILE_PTR == NULL) {
         fprintf(stderr, "Error opening file!\n");
