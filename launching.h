@@ -7,3 +7,4 @@
 #include <unistd.h>
 
 void launchInit();
+void launchInit_signals();

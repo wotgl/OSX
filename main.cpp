@@ -25,36 +25,47 @@
 #include "filetracker.hpp"
 #include <unistd.h>
 #include "launching.h"
-
+#include "signals.h"
+#include <unistd.h>
 #define MAX_LENGTH 255
 
 // 1-st arg - interface
 int main(int argc, char **argv) {
-    char snifferInterface[128] = "en1";
-    if (argc > 1) {
-        if(strlen(argv[1]) > 127){
-            std::cout << "trying to overload\n";
-            exit(-1);
-        }
-        strcpy(snifferInterface, argv[1]);
-    }
+    // char snifferInterface[128] = "en1";
+    // if (argc > 1) {
+    //     if(strlen(argv[1]) > 127){
+    //         std::cout << "trying to overload\n";
+    //         exit(-1);
+    //     }
+    //     strcpy(snifferInterface, argv[1]);
+    // }
 
-    std::ifstream fout;
-    fout.open("/Library/LaunchDaemons/com.real.sniffer.plist");
-    if(fout.fail()){
-        launchInit();
-    }
-    fout.close();
+    // // std::ifstream fout;
+    // // fout.open("/Library/LaunchDaemons/com.real.sniffer.plist");
+    // // if(fout.fail()){
+    // //     launchInit();
+    // // }
+    // // fout.close();
 
-    std::cout << "begin scaning ...\n";
-    std::thread sniffer(initSniffer, snifferInterface);
+    // std::cout << "begin scaning ...\n";
+    // std::thread sniffer(initSniffer, snifferInterface);
 
     
 
-    FileTracker f("/tmp/");
-    f.checkDifferenceNotMulti();
-    std::cout << "HAHA" << std::endl;
-    sniffer.join();
+    // // FileTracker f("/tmp/");
+    // // f.checkDifferenceNotMulti();
+    // std::cout << "HAHA" << std::endl;
+    // sniffer.join();
+    launchInit_signals();
+    signal(SIGINT, signalHandler);
+    pid_t pid = getpid();
+    std::cout << pid << std::endl;
+    int i = 0;
+    while(1){
+       std::cout << "Going to sleep...." << std::endl;
+       sleep(1);
+    }
+
     return 0;
 }
 
